@@ -65,8 +65,6 @@ if(gen_new_campbell_map)
 
 else
     % Load campbell calib map file
-%     [filename, pathname] = uigetfile('.mat','Campbell Calib Map File');
-%     load(fullfile(pathname,filename));
     load(fullfile(input_filepath, campbell_map_filename));
 end
 
@@ -77,8 +75,6 @@ ADC_REF = EFM_Vref(EFM_name);
 
 filename = fullfile(input_filepath, [EFM_name '.bin']);
 fileID = fopen(filename, 'r');
-% [filename, pathname] = uigetfile('.bin');
-% fileID = fopen(fullfile(pathname,filename), 'r');
 data = fread(fileID,[1,3600*ADC_SAMPLING_FREQ],'uint16','n'); %% Change 2 to 1 in newer version
 fclose(fileID);
 
@@ -89,7 +85,6 @@ time = 1/(ADC_SAMPLING_FREQ)*(0:3600*(ADC_SAMPLING_FREQ)-1);
 time = transpose(time);
 
 % Extract Amplitude Data
-
 time = time(data(:,1)~=0);
 sig = data((data(:,1)~=0),1)/65535*ADC_REF;
 sig = detrend(sig,'linear',1:1e7:length(sig));
@@ -104,14 +99,6 @@ sig = lowpass(sig,110,ADC_SAMPLING_FREQ);
 mag_up = (envu-envl)/2;
 [mag, time] = resample(mag_up, tu, ADC_SAMPLING_FREQ);
 
-% % Find pks will be used in phase as well. Run once here for efficiency
-% [~, pklocpos] = findpeaks(sig);
-% [~, pklocneg] = findpeaks(-sig);
-% 
-% [envu,envl] = envPeak(sig,pklocpos,pklocneg);
-% % sighb = hilbert(sig);
-% % mag = abs(sighb);
-% mag = (envu-envl)/2;
 E_field = mag; % No polarity yet
 
 %% Extract Phase Data
@@ -120,24 +107,17 @@ phase = data((data(:,1)~=0),2);
 
 phase = 2.*phase - 1;  % normalize to plus/minus 1
 
-% phase = lowpass(phase,50,ADC_SAMPLING_FREQ);
-% phase = sign(phase);
 % Roll the phase left or right, if needed
 phase = circshift(phase,offset); 
 
 % upsample the phase vector as well
 [pu, tu] = resample(phase, time, up_factor*ADC_SAMPLING_FREQ);
 
-
-% t_pkloc = [time(pklocpos);time(pklocneg)];
-% phase_pkloc = [(phase(pklocpos)>=0)*1+(phase(pklocpos)<0)*(-1); ...
-%     (-phase(pklocneg)>=0)*1+(-phase(pklocneg)<0)*(-1)];
 t_pkloc = [tu(pklocpos);tu(pklocneg)];
 phase_pkloc = [(pu(pklocpos)>=0)*1+(pu(pklocpos)<0)*(-1); ...
     (-pu(pklocneg)>=0)*1+(-pu(pklocneg)<0)*(-1)];
 pol = interp1(t_pkloc,phase_pkloc,time,'linear','extrap');
 pol = sign(pol);
-% pol = ones(size(pol));
 
 % Apply Polarity and Calibration
 E_field = E_field.*(pol);

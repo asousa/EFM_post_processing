@@ -3,13 +3,17 @@ close all; clear all;
 ADC_SAMPLING_FREQ = 1000;
 raw_data_dir = "/Volumes/lairdata/EFM/RELAMPAGO Data/Campaign Data";
 campbell_data_dir = "/Volumes/lairdata/EFM/RELAMPAGO Data/Campaign Data/Campbell Field Deployment";
-cal_dir = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/EFM calibration maps 5-12-2019";
+cal_dir = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/EFM calibration maps 6-17-2019";
+fig_dir = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/Site Corrections";
+
+Mplate = 89.79;  % Campbell's mill-specific collector area correction.
+Csite =  0.105;   % Campbell's reported site correction. Probably valid, but will vary with setup height
 
 % site_name = "Villa-del-Rosario"; EFM = 'EFM002'; lag = 0;  % works-ish
 % site_name = "Villa-Carlos-Paz";  EFM = 'EFM008';  lag = 0;   % works-ish
-site_name = "Cordoba"; EFM = 'EFM011'; lag = 0;    % "CR1000_EFM_old.dat" kinda works... missing EFM data for the other file
+% site_name = "Cordoba"; EFM = 'EFM011'; lag = 0;    % "CR1000_EFM_old.dat" kinda works... missing EFM data for the other file
 % site_name = "Manfredi"; EFM = 'EFM004';  lag = 0;  % Raw data is garbage at calibration :/ 
-% site_name = "Pilar";    EFM = 'EFM006';  lag = 10;  % This one works!
+site_name = "Pilar";    EFM = 'EFM006';  lag = 10;  % This one works!
 
 % site_name = "Almafuerte2"; EFM = 'EFM001'; lag = 30;
 
@@ -26,6 +30,13 @@ timec = regexprep(Cfile.TIMESTAMP, ':\d\d$', '$&.0', 'lineanchors');
 timec = datetime(timec, 'InputFormat', 'yyyy-MM-dd  HH:mm:ss.S');
 timec = timec + argentina_time_offset;
 EfieldC = str2double(Cfile.E_field);
+
+EfieldC = EfieldC*Csite*Mplate;  % Apply site correction to Campbell
+% Calibration map
+cal_file = fullfile(cal_dir,sprintf("%s_map_2019-06-17.mat",EFM));  
+cal_data = load(cal_file); % returns efmVolts, E_field_calib
+
+
 
 %% Load corresponding EFM data:
 
@@ -67,6 +78,11 @@ OUTPUT_SAMPLE_RATE = 100;
 E_field = process_hilbert(data, ADC_SAMPLING_FREQ, OUTPUT_SAMPLE_RATE, phase_offset);
 timeEFM = datetime(dvec(1),dvec(2),dvec(3),dvec(4),0,0) + seconds( ((0:length(E_field) - 1) )/OUTPUT_SAMPLE_RATE);
 
+
+%% Apply calibration curve:
+
+E_field_calib = interp1(cal_data.efmVolts, cal_data.E_field_calib, E_field,'linear','extrap');
+
 % figure();
 % plot(timeEFM, E_field);
 %% Downsample E_field to Campbell rate, for cross-corellation
@@ -74,7 +90,7 @@ clf;
 fig = figure(2);
 hold on;
 
-E_field_down = resample(E_field, 4, OUTPUT_SAMPLE_RATE);
+E_field_down = resample(E_field_calib, 4, OUTPUT_SAMPLE_RATE);
 timeEFM_down = timeEFM(1) + seconds( ((0:length(E_field_down) - 1) )/4);
 E_field_down(isnan(E_field_down)) = 0;
 
@@ -107,7 +123,7 @@ plot(timec, EfieldC);
 plot(timec, gain*EFD_short + offset);
 legend('Campbell',EFM);
 title(sprintf('Cross-calibration Fit at %s',site_name));
-ylabel('Electric field [kV/m] (ref. to Campbell)');
+ylabel({'Electric field [V/m]';sprintf('Campbell C_{site}=%g',Csite)});
 grid on;
 fprintf('Gain = %g, offset = %2g\n',gain,offset);
 
@@ -116,6 +132,6 @@ ycoords = get(gca,'ylim');
 xt = xcoords(1) + 0.7*(xcoords(2) - xcoords(1));
 yt = ycoords(1) + 0.1*(ycoords(2) - ycoords(1));
 
-text(xt,yt,sprintf('Gain = %g\nOffset = %g',gain,offset));
-saveas(gca, sprintf('Calibration_curve_%s_%s.png',site_name, EFM));
+text(xt,yt,sprintf('Gain = %2.3f\nOffset = %2.2f',gain,offset));
+saveas(gca, fullfile(fig_dir,sprintf('Calibration_curve_%s_%s.png',site_name, EFM)));
 
