@@ -4,16 +4,16 @@ ADC_SAMPLING_FREQ = 1000;
 OUTPUT_SAMPLE_RATE = 100; % Hz, what we're decimating to
 
 % Fiddle with this if we're having issues with large spikes from equal positive to negative values
-phase_offset = 1; 
+phase_offset = 3; 
 raw_data_dir = "/Volumes/lairdata/EFM/RELAMPAGO Data/Campaign Data";
 out_data_dir = "/Volumes/lairdata/EFM/RELAMPAGO Data/Austin Reprocessed Data/Uncalibrated";
 % cal_dir = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/EFM calibration maps 5-12-2019";
 
 % site_name = "Cordoba"; % cal_file = fullfile(cal_dir,"EFM011_map_2019-05-13.mat");  
-% site_name = "Manfredi"; %cal_file = fullfile(cal_dir,"EFM004_map_2019-05-13.mat");  
+site_name = "Manfredi"; %cal_file = fullfile(cal_dir,"EFM004_map_2019-05-13.mat");  
 % site_name = "Pilar";   % cal_file = fullfile(cal_dir,"EFM006_map_2019-05-13.mat");  
 % site_name = "Villa-del-Rosario"; %cal_file = fullfile(cal_dir,"EFM002_map_2019-05-13.mat");  
-site_name = "Villa-Carlos-Paz";  %cal_file = fullfile(cal_dir,"EFM008_map_2019-05-13.mat");  
+% site_name = "Villa-Carlos-Paz";  %cal_file = fullfile(cal_dir,"EFM008_map_2019-05-13.mat");  
 
 % cal_data = load(cal_file); % returns efmVolts, E_field_calib
 
@@ -33,8 +33,9 @@ spans = [spans; [datetime(2018,11,10,15,0,0), datetime(2018,11,13,6,0,0 )] ];
 spans = [spans; [datetime(2018,11,2,23,0,0 ), datetime(2018,11,3,2,0,0  )] ];
 
 %%
-
-for s_ind=1:length(spans)
+spans = [datetime(2018,10,25,0,0,0), datetime(2018,10,27,0,0,0)];
+% for s_ind=1:length(spans)
+for s_ind=1:1
     start_date = spans(s_ind,1);
     end_date = spans(s_ind,2);
     fprintf("Span %d\n",s_ind);
@@ -160,16 +161,18 @@ for i=1:length(dates_to_do)
     name = sprintf("%02d.mat",dvec(4));
     disp(name);
     odir = fullfile(out_data_dir,site_name,sprintf('%d',dvec(1)),sprintf('%d',dvec(2)), sprintf('%d',dvec(3)));
-    data = load(fullfile(odir,name));
-    hr = hours(dates_to_do(i) - dates_to_do(1));
-    
-%     [folder, baseFileName, extension] = fileparts(flist(i).name);
-%     hr = str2double(baseFileName);
-    t_start = hr*60*60*OUTPUT_SAMPLE_RATE + 1;
-    t_end = t_start + 60*60*OUTPUT_SAMPLE_RATE - 1;
-    
-    Evec(t_start:t_end) = data.E_field_raw;
-%     Evec = [Evec; data.E_field_calib];
+    if isfile(fullfile(odir,name))
+        data = load(fullfile(odir,name));
+        hr = hours(dates_to_do(i) - dates_to_do(1));
+
+    %     [folder, baseFileName, extension] = fileparts(flist(i).name);
+    %     hr = str2double(baseFileName);
+        t_start = hr*60*60*OUTPUT_SAMPLE_RATE + 1;
+        t_end = t_start + 60*60*OUTPUT_SAMPLE_RATE - 1;
+
+        Evec(t_start:t_end) = data.E_field_raw;
+    %     Evec = [Evec; data.E_field_calib];
+    end
 end
 
 figure(1);

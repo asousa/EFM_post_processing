@@ -9,20 +9,20 @@ fig_dir = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/Site Corre
 Mplate = 89.79;  % Campbell's mill-specific collector area correction.
 Csite =  0.105;   % Campbell's reported site correction. Probably valid, but will vary with setup height
 
-% site_name = "Villa-del-Rosario"; EFM = 'EFM002'; lag = 0;  % works-ish
+site_name = "Villa-del-Rosario"; EFM = 'EFM002'; lag = 0;  % works-ish
 % site_name = "Villa-Carlos-Paz";  EFM = 'EFM008';  lag = 0;   % works-ish
 % site_name = "Cordoba"; EFM = 'EFM011'; lag = 0;    % "CR1000_EFM_old.dat" kinda works... missing EFM data for the other file
 % site_name = "Manfredi"; EFM = 'EFM004';  lag = 0;  % Raw data is garbage at calibration :/ 
-site_name = "Pilar";    EFM = 'EFM006';  lag = 10;  % This one works!
+% site_name = "Pilar";    EFM = 'EFM006';  lag = 10;  % This one works!
 
 % site_name = "Almafuerte2"; EFM = 'EFM001'; lag = 30;
 
 argentina_time_offset = hours(3); 
 phase_offset = 1;
 % Load Campbell data:
-campbell_file = fullfile(campbell_data_dir,EFM,'CR1000_EFM.dat');
+% campbell_file = fullfile(campbell_data_dir,EFM,'CR1000_EFM.dat');
 % campbell_file = fullfile(campbell_data_dir,'RELAMPAGO Pilar Calib','Campbell-Pilar-121918','CR1000_EFM-cal-121918-1147am.dat');
-% campbell_file = fullfile(campbell_data_dir,'RELAMPAGO Pilar Calib','Campbell-Pilar-121918','CR1000_EFM-cal-121918-1153am.dat');
+campbell_file = fullfile(campbell_data_dir,'RELAMPAGO Pilar Calib','Campbell-Pilar-121918','CR1000_EFM-cal-121918-1153am.dat');
 Cfile = readtable(campbell_file);
 Cfile = Cfile(3:end,:);
 

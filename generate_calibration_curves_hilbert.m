@@ -8,10 +8,10 @@ ADC_SAMPLING_FREQ = 1000;
 OUTPUT_SAMPLE_RATE = 100; % hz
 phase_offset = 2;     % Samples to shift phase by (some mills have the optical encoder mis-aligned)
 
-EFM_name = 'EFM011';
+EFM_name = 'EFM009';
 
 output_filepath = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/EFM calibration maps 6-17-2019";
-input_filepath = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/Calibration Data 5-12-2019";
+input_filepath = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/Calibration Data 5-2019";
 campbell_map_filename = "CR1000_EFM_redo Map.mat";
 
 prev_data_filepath = "/Volumes/lairdata/EFM/Field Mill Post-Campaign Calibration/Original calibration data/";
@@ -69,7 +69,7 @@ end
 %% Load EFM File
 disp("Loading EFM File");
 efm_table_volts = EFM_table_volts(EFM_name);
-ADC_REF = EFM_Vref(EFM_name);
+% ADC_REF = EFM_Vref(EFM_name);
 
 filename = fullfile(input_filepath, [EFM_name '.bin']);
 fileID = fopen(filename, 'r');
